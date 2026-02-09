@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Agent Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 25%, #6c5b7b 50%, #355c7d 75%, #2a4d69 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease;
+        }
+
+        .welcome-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+        }
+
+        .welcome-text {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #fff, #ffd700, #ff69b4, #fff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textGlow 3s ease infinite, float 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+        }
+
+        @keyframes textGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .welcome-subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+
+        .tap-hint {
+            margin-top: 40px;
+            font-size: 1rem;
+            opacity: 0.7;
+            animation: pulse 2s ease infinite;
+        }
+
+        .start-btn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease 0.8s both;
+        }
+
+        .start-btn:hover {
+            background: white;
+            color: #ff6b9d;
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .welcome-footer {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            letter-spacing: 0.1em;
+        }
+
+        .welcome-footer span {
+            font-weight: 600;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 0.9;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-text {
+                font-size: 3rem;
+            }
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        .chat-container {
+            width: 95%;
+            max-width: 900px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .lang-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .lang-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .lang-option:last-child {
+            border-bottom: none;
+        }
+
+        .lang-option:hover {
+            background: #f5f5f5;
+        }
+
+        .lang-option.active {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .lang-flag {
+            font-size: 20px;
+        }
+
+        .lang-name {
+            flex: 1;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .message-content img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 10px 0;
+            display: block;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        #voiceBtn {
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #voiceBtn:hover {
+            background: #f0f0ff;
+        }
+
+        #voiceBtn.recording {
+            background: #ff4444;
+            border-color: #ff4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: scale(1.05);
+        }
+
+        #sendBtn:active {
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            #voiceBtn {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+            <div class="welcome-text">👋 Hi<br>GRWM...</div>
+            <div class="welcome-subtitle">Your Fashion & Beauty Companion</div>
+            <button class="start-btn" onclick="enterChat()">START</button>
+        </div>
+        <div class="welcome-footer">Founded by <span>PRAJEEVSU</span></div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">✨ Fashion Agent</div>
+            <div class="language-selector">
+                <button class="lang-btn" onclick="toggleLanguages()">
+                    <span id="currentFlag">🇬🇧</span>
+                    <span id="currentLang">English</span>
+                    <span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <div class="lang-option active" onclick="selectLanguage('en', '🇬🇧', 'English')">
+                        <span class="lang-flag">🇬🇧</span>
+                        <span class="lang-name">English</span>
+                    </div>
+                    <div class="lang-option" onclick="selectLanguage('kn', '🇮🇳', 'ಕನ್ನಡ')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">ಕನ್ನಡ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    Hello! I'm your personal fashion consultant. Ask me about fashion trends, styling tips, makeup advice, or beauty recommendations! 💄👗
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <button id="voiceBtn" title="Voice input">🎤</button>
+            <input type="text" id="userInput" placeholder="Ask about fashion, makeup, or beauty..." />
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // Generate unique session ID
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        // Voice recognition setup
+        let recognition = null;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+                if (event.error === 'no-speech') {
+                    addMessage('No speech detected. Please try again.', false);
+                }
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            };
+        }
+
+        voiceBtn.addEventListener('click', () => {
+            if (!recognition) {
+                addMessage('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.', false);
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            } else {
+                try {
+                    recognition.start();
+                    isRecording = true;
+                    voiceBtn.classList.add('recording');
+                    voiceBtn.textContent = '🔴';
+                } catch (error) {
+                    console.error('Error starting recognition:', error);
+                }
+            }
+        });
+
+        function addMessage(content, isUser, images = []) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (!isUser) {
+                // Format bot messages with better structure
+                content = content
+                    .replace(/\n\n/g, '<br><br>')  // Double line breaks
+                    .replace(/\n/g, '<br>')  // Single line breaks
+                    .replace(/•/g, '<br>•')  // Bullet points
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')  // Bold text
+                    .replace(/🎨|💄|👗|✨|💃|🌍|📱|🚀/g, '<span style="font-size: 1.2em;">$&</span>');  // Larger emojis
+                contentDiv.innerHTML = content;
+                
+                // Add images if provided
+                if (images && images.length > 0) {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = images.length > 2 ? 'image-grid' : '';
+                    
+                    images.forEach(imgUrl => {
+                        const img = document.createElement('img');
+                        img.src = imgUrl;
+                        img.alt = 'Fashion inspiration';
+                        img.loading = 'lazy';
+                        imageContainer.appendChild(img);
+                    });
+                    
+                    contentDiv.appendChild(imageContainer);
+                }
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.insertBefore(messageDiv, typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            userInput.value = '';
+            showTyping();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        session_id: sessionId 
+                    })
+                });
+
+                const data = await response.json();
+                hideTyping();
+                addMessage(data.response, false, data.images || []);
+            } catch (error) {
+                hideTyping();
+                addMessage('Sorry, something went wrong. Please try again.', false);
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function enterChat() {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            welcomeScreen.classList.add('fade-out');
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+            }, 800);
+        }
+
+        let selectedLanguage = 'en';
+
+        function toggleLanguages() {
+            const dropdown = document.getElementById('langDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectLanguage(code, flag, name) {
+            selectedLanguage = code;
+            document.getElementById('currentFlag').textContent = flag;
+            document.getElementById('currentLang').textContent = name;
+            
+            // Update active state
+            document.querySelectorAll('.lang-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.closest('.lang-option').classList.add('active');
+            
+            // Update voice recognition language
+            if (recognition) {
+                const langMap = {
+                    'en': 'en-US', 'kn': 'kn-IN'
+                };
+                recognition.lang = langMap[code] || 'en-US';
+            }
+            
+            toggleLanguages();
+            
+            // Update placeholder
+            const placeholders = {
+                'en': 'Ask about fashion, makeup, or beauty...',
+                'kn': 'ಫ್ಯಾಷನ್, ಮೇಕಪ್ ಅಥವಾ ಸೌಂದರ್ಯದ ಬಗ್ಗೆ ಕೇಳಿ...'
+            };
+            userInput.placeholder = placeholders[code] || placeholders['en'];
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const langSelector = document.querySelector('.language-selector');
+            const dropdown = document.getElementById('langDropdown');
+            if (!langSelector.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
